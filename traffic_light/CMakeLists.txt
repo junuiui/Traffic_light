@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(as4 VERSION 1.0 DESCRIPTION "Traffic Light: Buzzer + PRU + NeoPixel" LANGUAGES C)
+project(traffic_light VERSION 1.0 DESCRIPTION "Traffic Light: Buzzer + PRU + NeoPixel" LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 # add_compile_options(-Wall -Wpedantic -Wextra)
