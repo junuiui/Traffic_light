@@ -99,25 +99,118 @@ void Led_turnoff(){
     Led_display();
 }
 
+
+/**
+ * Set Led to Black (3rd, 6st)
+*/
+void Led_setBlack(){
+    color[2] = NO_COLOR;
+    color[5] = NO_COLOR;
+    Led_display();
+}
+
+/**
+ * Set Led to Red
+ * color[7,6]
+*/
+void Led_Red(){
+    for (int i = 0; i < 8; i++){
+        if (i < 6){
+            color[i] = NO_COLOR;
+        }
+        else{
+            color[i] = RED_BRIGHT;
+        }
+    }
+    Led_setBlack();
+}
+
+/**
+ * Set Led to Yellow
+ * color[4,3]
+*/
+void Led_Yellow(){
+    for (int i = 0; i < 8; i++){
+        
+        if (i == 4 || i == 3){
+            color[i] = 0x07070000;
+        }
+        else{
+            color[i] = NO_COLOR;
+        }
+    }
+    Led_setBlack();
+}
+
+/**
+ * Set Led to Green
+ * color[1,0]
+*/
+void Led_Green(){
+    for (int i = 0; i < 8; i++){
+        if (i < 3){
+            color[i] = GREEN_BRIGHT;
+        }
+        else{
+            color[i] = NO_COLOR;
+        }
+    }
+    Led_setBlack();
+}
+
+void Led_setColor(int flag){
+
+    switch(flag){
+        case 0: // RED
+            color[7] = RED_BRIGHT;
+            color[6] = RED_BRIGHT;
+            break;
+        case 1: // Yellow
+
+    }
+}
+
+void Led_setAllYellow(){
+    for (int i = 0; i < 8; i++){
+        color[i] = 0x07070000;
+    }
+    Led_setBlack();
+}
+
+/**
+ * Set Led to Yellow and flashing
+*/
+void Led_setYellowFlashing(){
+    
+    // turn on for 0.5 seconds
+    Led_setAllYellow();
+    delayForMS(500);
+
+    // turn off for 0.5 seconds
+    Led_turnoff();
+    delayForMS(500);
+}
+
 void main(void){
     // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
     CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
     __delay_cycles(resetCycles);
+    
+    for (int i = 0 ; i < 3; i++){
+        Led_setYellowFlashing();
+    }
 
-    // test for Led_display
-    color[0] = GREEN_BRIGHT;
-    color[1] = RED_BRIGHT;
-    color[2] = BLUE_BRIGHT;
-    color[3] = NO_COLOR;
-    color[4] = GREEN_BRIGHT;
-    color[5] = RED_BRIGHT;
-    color[6] = BLUE_BRIGHT;
-    color[7] = NO_COLOR;
+    Led_Red();
+    delayForMS(2000);
 
-    Led_display();
+    Led_Yellow();
+    delayForMS(2000);
 
-    delayForMS(1000);
+    Led_Green();
+    delayForMS(2000);
+
     Led_turnoff();
+
     __halt();
 }
 
