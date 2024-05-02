@@ -6,17 +6,38 @@
 */
 
 #include <hal/buzzer.h>
+#include <hal/sharedMem-Linux.h>
 
 #include <stdio.h>
+#include <pthread.h>
 
 int main(){
 
-    printf("First init... Testing CMAKE\n");
-
+    // initialize
+    sharedMem_init();
     buzzer_init();
-    buzzer_playSound(1);
-    buzzer_playSound(2);
-    buzzer_playSound(3);
+
+    printf("INIT: Successful!\n");
+
+    // pthread
+    pthread_t sharedMemThread;
+    printf("PTHREAD: Successful!\n");
+
+    // pthread create
+    if (pthread_create(&sharedMemThread, NULL, sharedMem_thread, NULL) != 0) {
+        fprintf(stderr, "Error creating sharedMem thread\n");
+        return 1;
+    }
+    printf("PTHREAD_CREATE: Successful!\n");
+
+    //
+    while (sharedMem_getStatus()){
+        ; // loop
+    }
+    printf("ENDED!\n");
+    // clean up
+    buzzer_cleanup();
+    sharedMem_cleanup();
 
     return 0;
 }

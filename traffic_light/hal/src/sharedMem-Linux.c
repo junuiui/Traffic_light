@@ -64,9 +64,19 @@ void* sharedMem_thread (void* args) {
     volatile void *pPruBase = getPruMmapAddr();
     volatile sharedMemStruct_t *pSharedPru0 = PRU0_MEM_FROM_BASE(pPruBase);
 
+    pSharedPru0->isDownPressed = false;
+    pSharedPru0->isRightPressed = false;
+    pSharedPru0->mode = false;
+    pSharedPru0->gTime = 15000; // 15 sec
+    pSharedPru0->rTime = 15000; // 15
+    pSharedPru0->yTime = 2000;  // 2
+
     // Drive it
     while(shouldRun) {
-
+        if(pSharedPru0->isRightPressed){
+            shouldRun = 0;
+            break;
+        }
     }
 
     // Cleanup
