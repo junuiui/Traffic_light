@@ -46,10 +46,29 @@
 volatile register uint32_t __R30;   // OUTPUT GPIO register
 volatile register uint32_t __R31;   // INPUT  GPIO register
 
+// JOYSTICK
+#define JOYSTICK_RIGHT_MASK (1 << 15)   // for exit
+#define JOYSTICK_DOWN_MASK (1 << 14)    // for chaning mode
+
+// Shared Memory Configuration
+// -----------------------------------------------------------
+#define THIS_PRU_DRAM 0x00000 // Address of DRAM
+#define OFFSET 0x200 // Skip 0x100 for Stack,
+ // 0x100 for Heap (from makefile)
+#define THIS_PRU_DRAM_USABLE (THIS_PRU_DRAM + OFFSET)
+// This works for both PRU0 and PRU1 as both map their own memory to 0x0000000
+volatile sharedMemStruct_t *pSharedMemStruct = (volatile void *)THIS_PRU_DRAM_USABLE;
+
 // Array for holding colours
 // index 0 --> bottom of LED
 // index 7 --> top of LED
 static uint32_t color[STR_LEN];
+
+// previous mode
+static bool prevMode;
+
+// Default time
+static int overall_delay = 10000; // adjust here
 
 /**
  * Delaying for given miliseconds
@@ -158,17 +177,6 @@ void Led_Green(){
     Led_setBlack();
 }
 
-void Led_setColor(int flag){
-
-    switch(flag){
-        case 0: // RED
-            color[7] = RED_BRIGHT;
-            color[6] = RED_BRIGHT;
-            break;
-        case 1: // Yellow
-
-    }
-}
 
 void Led_setAllYellow(){
     for (int i = 0; i < 8; i++){
@@ -191,23 +199,80 @@ void Led_setYellowFlashing(){
     delayForMS(500);
 }
 
+/**
+ * Red --> Yello --> Green --> Red
+ * Default Time Distribution:
+ * RED: 40%
+ * YELLOW: 10%
+ * GREEN: 50% 
+*/
+void Led_normal(){
+    
+    // Default: 10 seconds
+    int redTime = overall_delay * 0.4;
+    int yellowTime = overall_delay * 0.15;
+    int greenTime = overall_delay * 0.45;
+    
+    pSharedMemStruct->rTime = redTime;
+    pSharedMemStruct->yTime = yellowTime;
+    pSharedMemStruct->gTime = greenTime;
+
+    Led_Red();
+    delayForMS(redTime);
+
+    Led_Yellow();
+    delayForMS(yellowTime);
+
+    Led_Green();
+    delayForMS(greenTime);
+}
+
+void Led_interact(){
+
+    // check change
+    if (prevMode == pSharedMemStruct->mode){
+        return;
+    }
+
+    // change previous mode
+    prevMode = pSharedMemStruct->mode;
+
+    // default flashing Yellow Flashing
+    if (prevMode){
+        Led_setYellowFlashing();
+    }
+    else{
+        Led_normal();
+    }
+}
+
 void main(void){
     // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
     CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
     __delay_cycles(resetCycles);
-    
-    for (int i = 0 ; i < 3; i++){
-        Led_setYellowFlashing();
+
+    // initialize
+    prevMode = pSharedMemStruct->mode;
+
+    while (!pSharedMemStruct->isRightPressed){
+
+        // check for right / down pressed
+        pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
+        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
+
+        if (pSharedMemStruct->isDownPressed){
+
+            pSharedMemStruct->mode = !pSharedMemStruct->mode; // change mode
+            delayForMS(100); // wait for chaning mode 
+            
+        }
+
+        // interact with modes
+        Led_interact();
+
+        // delay for prevent duplicate presses
+        delayForMS(100);
     }
-
-    Led_Red();
-    delayForMS(2000);
-
-    Led_Yellow();
-    delayForMS(2000);
-
-    Led_Green();
-    delayForMS(2000);
 
     Led_turnoff();
 

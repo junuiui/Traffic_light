@@ -15,12 +15,14 @@
 
 typedef struct {
 
-    bool isRightPressed;
-    bool isDownPressed;
-    bool isHit;
-    bool lock;
-    int diffX;
-    int diffY;
+    bool isRightPressed;    // Right Press for exit program
+    bool isDownPressed;     // Down Press for change mode
+    bool mode;
+    char padding;           // PADDING
+    int rTime;
+    int yTime;
+    int gTime;
+
 } sharedMemStruct_t;
 
 #endif

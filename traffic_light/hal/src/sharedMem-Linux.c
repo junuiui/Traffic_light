@@ -1,4 +1,4 @@
-// From CMPT433 PRU Guide
+// Referenced SFU Dr. Brian Fraser's PRU Guide
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -63,12 +63,7 @@ void* sharedMem_thread (void* args) {
     // Get access to shared memory for my uses
     volatile void *pPruBase = getPruMmapAddr();
     volatile sharedMemStruct_t *pSharedPru0 = PRU0_MEM_FROM_BASE(pPruBase);
-    // initialize 
 
-    float pointX, pointY, userX, userY;
-    int diffX, diffY;
-    int count = 0;
-    int countX = 0;
     // Drive it
     while(shouldRun) {
 
