@@ -245,10 +245,7 @@ void main(void){
     // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
     CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
     __delay_cycles(resetCycles);
-
-    // initialize
-    prevMode = pSharedMemStruct->mode;
-
+    
     while (!pSharedMemStruct->isRightPressed){
 
         // check for right pressed
