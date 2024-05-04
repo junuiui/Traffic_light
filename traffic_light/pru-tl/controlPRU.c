@@ -2,7 +2,7 @@
  * Description: Codes for controlling PRU
  * 
  * Author: Junui Hong
- * Last Modified: 2024-04-24
+ * Last Modified: 2024-05-04
 */
 
 // .h files
@@ -183,14 +183,31 @@ void Led_setAllYellow(){
  * Set Led to Yellow and flashing
 */
 void Led_setYellowFlashing(){
-    
-    // turn on for 0.5 seconds
-    Led_setAllYellow();
-    delayForMS(500);
 
-    // turn off for 0.5 seconds
+    int count = 0;
+
+    Led_setAllYellow();
+    while (count < 250){
+        count++;
+        delayForMS(2);
+        pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
+        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
+        if (pSharedMemStruct->isRightPressed || pSharedMemStruct->isDownPressed){
+            return;
+        }
+    }
+
+    count = 0;
     Led_turnoff();
-    delayForMS(500);
+    while (count < 250){
+        count++;
+        delayForMS(2);
+        pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
+        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
+        if (pSharedMemStruct->isRightPressed || pSharedMemStruct->isDownPressed){
+            return;
+        }
+    }
 }
 
 /**
@@ -206,36 +223,39 @@ void Led_normal(){
     int tempTime;
 
     tempTime = pSharedMemStruct->rTime / 1000;
+    Led_Red();
     while (count < 1000){
         count++;
-        Led_Red();
         delayForMS(tempTime);
         pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
-        if (pSharedMemStruct->isRightPressed){
+        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
+        if (pSharedMemStruct->isRightPressed || pSharedMemStruct->isDownPressed){
             return;
         }
     }
 
     count = 0;
     tempTime = pSharedMemStruct->yTime / 1000;
+    Led_Yellow();
     while (count < 1000){
         count++;
-        Led_Yellow();
         delayForMS(tempTime);
         pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
-        if (pSharedMemStruct->isRightPressed){
+        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
+        if (pSharedMemStruct->isRightPressed || pSharedMemStruct->isDownPressed){
             return;
         }
     }
 
     count = 0;
     tempTime = pSharedMemStruct->gTime / 1000;
+    Led_Green();
     while (count < 1000){
         count++;
-        Led_Green();
         delayForMS(tempTime);
         pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
-        if (pSharedMemStruct->isRightPressed){
+        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
+        if (pSharedMemStruct->isRightPressed || pSharedMemStruct->isDownPressed){
             return;
         }
     }
@@ -245,15 +265,26 @@ void main(void){
     // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
     CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
     __delay_cycles(resetCycles);
-    
+
     while (!pSharedMemStruct->isRightPressed){
 
         // check for right pressed
         pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
+        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
 
         // interact with modes
-        Led_normal();
-
+        if (pSharedMemStruct->mode){
+            Led_normal();
+        }
+        else{
+            Led_setYellowFlashing();    
+        }
+        
+        // Change mode if down pressed
+        if (pSharedMemStruct->isDownPressed){
+            pSharedMemStruct->mode = !pSharedMemStruct->mode;
+        }
+        
         // delay for prevent duplicate presses
         delayForMS(100);
     }

@@ -78,8 +78,8 @@ void* sharedMem_thread (void* args) {
             break;
         }
 
-        printf("ISDOWN: %d\n", pSharedPru0->isDownPressed);
-        printf("isRIGHT: %d\n", pSharedPru0->isRightPressed);
+        printf("DOWN? %d ", pSharedPru0->isDownPressed);
+        printf("RIGHT?: %d ", pSharedPru0->isRightPressed);
         printf("mode: %d\n", pSharedPru0->mode);
         sleepForMs(100);
     }
