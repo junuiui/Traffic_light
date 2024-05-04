@@ -16,7 +16,6 @@ int main(){
     // initialize
     sharedMem_init();
     buzzer_init();
-
     printf("INIT: Successful!\n");
 
     // pthread
@@ -30,11 +29,12 @@ int main(){
     }
     printf("PTHREAD_CREATE: Successful!\n");
 
-    //
+    // main loop
     while (sharedMem_getStatus()){
         ; // loop
     }
-    printf("ENDED!\n");
+    printf("Main Loop Ended!\n");
+
     // clean up
     buzzer_cleanup();
     sharedMem_cleanup();

@@ -64,12 +64,6 @@ volatile sharedMemStruct_t *pSharedMemStruct = (volatile void *)THIS_PRU_DRAM_US
 // index 7 --> top of LED
 static uint32_t color[STR_LEN];
 
-// previous mode
-static bool prevMode;
-
-// Default time
-static int overall_delay = 10000; // adjust here
-
 /**
  * Delaying for given miliseconds
  * @param numMS to delay for 
@@ -207,42 +201,43 @@ void Led_setYellowFlashing(){
  * GREEN: 50% 
 */
 void Led_normal(){
-    
-    // Default: 10 seconds
-    int redTime = overall_delay * 0.4;
-    int yellowTime = overall_delay * 0.15;
-    int greenTime = overall_delay * 0.45;
-    
-    pSharedMemStruct->rTime = redTime;
-    pSharedMemStruct->yTime = yellowTime;
-    pSharedMemStruct->gTime = greenTime;
 
-    Led_Red();
-    delayForMS(redTime);
+    int count = 0; 
+    int tempTime;
 
-    Led_Yellow();
-    delayForMS(yellowTime);
-
-    Led_Green();
-    delayForMS(greenTime);
-}
-
-void Led_interact(){
-
-    // check change
-    if (prevMode == pSharedMemStruct->mode){
-        return;
+    tempTime = pSharedMemStruct->rTime / 1000;
+    while (count < 1000){
+        count++;
+        Led_Red();
+        delayForMS(tempTime);
+        pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
+        if (pSharedMemStruct->isRightPressed){
+            return;
+        }
     }
 
-    // change previous mode
-    prevMode = pSharedMemStruct->mode;
-
-    // default flashing Yellow Flashing
-    if (prevMode){
-        Led_setYellowFlashing();
+    count = 0;
+    tempTime = pSharedMemStruct->yTime / 1000;
+    while (count < 1000){
+        count++;
+        Led_Yellow();
+        delayForMS(tempTime);
+        pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
+        if (pSharedMemStruct->isRightPressed){
+            return;
+        }
     }
-    else{
-        Led_normal();
+
+    count = 0;
+    tempTime = pSharedMemStruct->gTime / 1000;
+    while (count < 1000){
+        count++;
+        Led_Green();
+        delayForMS(tempTime);
+        pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
+        if (pSharedMemStruct->isRightPressed){
+            return;
+        }
     }
 }
 
@@ -256,19 +251,11 @@ void main(void){
 
     while (!pSharedMemStruct->isRightPressed){
 
-        // check for right / down pressed
+        // check for right pressed
         pSharedMemStruct->isRightPressed = (__R31 & JOYSTICK_RIGHT_MASK) == 0;
-        pSharedMemStruct->isDownPressed = (__R31 & JOYSTICK_DOWN_MASK) == 0;
-
-        if (pSharedMemStruct->isDownPressed){
-
-            pSharedMemStruct->mode = !pSharedMemStruct->mode; // change mode
-            delayForMS(100); // wait for chaning mode 
-            
-        }
 
         // interact with modes
-        Led_interact();
+        Led_normal();
 
         // delay for prevent duplicate presses
         delayForMS(100);
